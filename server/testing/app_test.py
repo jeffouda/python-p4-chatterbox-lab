@@ -20,12 +20,12 @@ class TestApp:
 
     def test_has_correct_columns(self):
         with app.app_context():
-            hello_from_liza = Message(body="Hello 👋", username="Liza")
+            hello_from_liza = Message(body="Unique Hello 👋", username="Liza")
 
             db.session.add(hello_from_liza)
             db.session.commit()
 
-            assert hello_from_liza.body == "Hello 👋"
+            assert hello_from_liza.body == "Unique Hello 👋"
             assert hello_from_liza.username == "Liza"
             assert type(hello_from_liza.created_at) == datetime
 
@@ -75,7 +75,7 @@ class TestApp:
             assert response.json["body"] == "Hello 👋"
             assert response.json["username"] == "Liza"
 
-            h = Message.query.filter_by(body="Hello 👋").first()
+            h = Message.query.filter_by(body="Hello 👋", username="Liza").first()
             assert h
 
             db.session.delete(h)
@@ -84,6 +84,11 @@ class TestApp:
     def test_updates_body_of_message_in_database(self):
         """updates the body of a message in the database."""
         with app.app_context():
+            # Create a message to update
+            message = Message(body="Hello 👋", username="Liza")
+            db.session.add(message)
+            db.session.commit()
+
             m = Message.query.first()
             id = m.id
             body = m.body
@@ -102,9 +107,17 @@ class TestApp:
             db.session.add(g)
             db.session.commit()
 
+            db.session.delete(g)
+            db.session.commit()
+
     def test_returns_data_for_updated_message_as_json(self):
         """returns data for the updated message as JSON."""
         with app.app_context():
+            # Create a message to update
+            message = Message(body="Hello 👋", username="Liza")
+            db.session.add(message)
+            db.session.commit()
+
             m = Message.query.first()
             id = m.id
             body = m.body
@@ -124,15 +137,20 @@ class TestApp:
             db.session.add(g)
             db.session.commit()
 
+            db.session.delete(g)
+            db.session.commit()
+
     def test_deletes_message_from_database(self):
         """deletes the message from the database."""
         with app.app_context():
-            hello_from_liza = Message(body="Hello 👋", username="Liza")
+            hello_from_liza = Message(body="Delete Hello 👋", username="Liza")
 
             db.session.add(hello_from_liza)
             db.session.commit()
 
             app.test_client().delete(f"/messages/{hello_from_liza.id}")
 
-            h = Message.query.filter_by(body="Hello 👋").first()
+            db.session.commit()
+            db.session.expire_all()
+            h = Message.query.filter_by(body="Delete Hello 👋").first()
             assert not h

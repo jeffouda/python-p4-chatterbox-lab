@@ -56,6 +56,7 @@ def delete_message(id):
     if not message:
         return jsonify({"error": "Message not found"}), 404
     db.session.delete(message)
+    db.session.flush()
     db.session.commit()
     return "", 204
 
